@@ -35,7 +35,7 @@
       category: d.category || "Others",
       emoji: d.emoji || "🛒",
       imageUrl: d.imageUrl || "",
-      weight: d.unit === "kg" ? "per kg" : d.unit === "gram" ? "per gram" : "per unit",
+      weight: d.unit === "kg" ? "per kg" : d.unit === "gram" ? "per 100 gram" : "per unit",
       price: d.discountedPrice ?? 0,
       originalPrice: d.originalPrice || null,
       badge: d.badge || null,
@@ -679,6 +679,7 @@ footer {
     <li><a href="#categories">Categories</a></li>
     <li><a href="#shop">Shop</a></li>
     <li><a href="#how">How it works</a></li>
+    <li><a href="tel:+918606564151">Contact us</a></li>
   </ul>
   <div class="nav-right">
     <button class="cart-btn" id="cartBtn">
@@ -692,6 +693,7 @@ footer {
   <a href="#categories" onclick="closeMob()">Categories</a>
   <a href="#shop" onclick="closeMob()">Shop</a>
   <a href="#how" onclick="closeMob()">How it works</a>
+  <a href="tel:+918606564151">Contact : +91 86065 64151</a>
 </nav>
 
 <!-- ══ HERO ══ -->
@@ -706,7 +708,7 @@ footer {
       <a href="#how" class="btn btn-ghost">How it works</a>
     </div>
     <div class="hero-trust">
-      <div class="trust-item"><strong>2,400+</strong><small>Local products</small></div>
+      <div class="trust-item"><strong>100+</strong><small>Local products</small></div>
       <div class="trust-item"><strong>&lt;45 min</strong><small>Avg. delivery</small></div>
       <div class="trust-item"><strong>98%</strong><small>Happy orders</small></div>
     </div>
@@ -774,7 +776,7 @@ footer {
   </div>
   <div class="steps">
     <div class="step"><div class="step-icon">🔍</div><div class="step-num">1</div><h3>Browse & pick</h3><p>Explore hundreds of fresh local items and add your favourites to the cart.</p></div>
-    <div class="step"><div class="step-icon">📍</div><div class="step-num">2</div><h3>Enter location</h3><p>Drop your address and we'll confirm delivery — usually within 30 km.</p></div>
+    <div class="step"><div class="step-icon">📍</div><div class="step-num">2</div><h3>Enter location</h3><p>Drop your address and we'll confirm delivery — usually within 5 km.</p></div>
     <div class="step"><div class="step-icon">💳</div><div class="step-num">3</div><h3>Pay your way</h3><p>cash on delivery</p></div>
     <div class="step"><div class="step-icon">🚴</div><div class="step-num">4</div><h3>Fast delivery</h3><p>Packed fresh and at your door in under an hour.</p></div>
   </div>
@@ -791,7 +793,7 @@ footer {
 <div class="footer-col">
   <h4>About Us</h4>
   <p>
-    Gozzo is a grocery delivery app dedicated to bringing fresh groceries and everyday essentials to your doorstep quickly and reliably. We currently serve customers within a 30 km radius of Chakkarakkal, Kannur, Kerala.
+    Gozzo is a grocery delivery app dedicated to bringing fresh groceries and everyday essentials to your doorstep quickly and reliably. We currently serve customers within a 5 km radius of Chakkarakkal, Kannur, Kerala.
   </p>
 </div>
     <div class="footer-col">
@@ -799,7 +801,7 @@ footer {
   <p>
     For any issues, returns, order support, or general inquiries, please contact us at:
     <br><br>
-    <a href="tel:+918606564171">+91 86065 64171</a>
+    <a href="tel:+918606564151">+91 86065 64151</a>
   </p>
 </div>
   </div>
@@ -831,9 +833,9 @@ footer {
       <button class="drawer-close" onclick="closeCheckout()">✕</button>
     </div>
     <div class="modal-body" id="checkoutBody">
-      <b>Note: We currently deliver only within a 30 km radius of Chakkarakkal, Kannur, Kerala. Please ensure your delivery address falls within this service area before placing your order.</b>
+      <b>Note: We currently deliver only within a 5 km radius of Chakkarakkal, Kannur, Kerala. Please ensure your delivery address falls within this service area before placing your order.</b>
       <div class="field"><label>Full Name</label><input id="cName" type="text" placeholder="e.g. Rajan Menon"></div>
-      <div class="field"><label>Phone Number</label><input id="cPhone" type="tel" placeholder="+91 98765 43210"></div>
+      <div class="field"><label>Phone Number</label><input id="cPhone" type="tel" placeholder="+91 8606564151"></div>
       <div class="field"><label>Delivery Address</label><textarea id="cAddress" placeholder="Door no., Street, Area, Pincode…"></textarea></div>
       <div class="field">
         <label>Payment Method</label>

@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gozzo Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+
+<style>
+/* ══════════════════════════════════════════════
+   TOKENS — matched to the Gozzo storefront
+══════════════════════════════════════════════ */
+:root {
+  --g: #1d8c52;
+  --g2: #2db56a;
+  --g-pale: #e8f7ef;
+  --cream: #f8f4ed;
+  --warm: #efe7d6;
+  --bark: #221a10;
+  --bark2: #5c3f20;
+  --gold: #e8a020;
+  --red: #e03535;
+  --white: #ffffff;
+  --muted: #8a7f72;
+  --border: rgba(34,26,16,0.09);
+  --shadow-sm: 0 2px 12px rgba(0,0,0,0.06);
+  --shadow-md: 0 8px 32px rgba(0,0,0,0.1);
+  --shadow-lg: 0 20px 60px rgba(0,0,0,0.14);
+  --r: 14px;
+  --r-sm: 8px;
+  --r-lg: 22px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--bark);
+  min-height: 100vh;
+}
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--g2); border-radius: 99px; }
+
+/* ══════════════════════════════════════════════
+   LOGIN SCREEN
+══════════════════════════════════════════════ */
+#loginScreen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(ellipse 50% 50% at 80% 10%, rgba(45,181,106,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 10% 90%, rgba(232,160,32,0.08) 0%, transparent 60%),
+    var(--cream);
+}
+.login-card {
+  width: 100%; max-width: 360px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 38px 32px 32px;
+}
+.login-logo {
+  font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800;
+  letter-spacing: -1px; margin-bottom: 4px;
+}
+.login-logo em { font-style: normal; color: var(--g); }
+.login-sub { color: var(--muted); font-size: 13.5px; margin-bottom: 28px; }
+.field { margin-bottom: 16px; }
+.field label {
+  display: block; font-size: 12.5px; font-weight: 700; color: var(--bark2);
+  margin-bottom: 6px; letter-spacing: 0.2px;
+}
+.field input, .field select, .field textarea {
+  width: 100%; padding: 11px 13px; font-size: 14.5px;
+  border: 1.5px solid var(--border); border-radius: var(--r-sm);
+  background: var(--cream); color: var(--bark);
+  transition: border-color 0.15s, background 0.15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--g); background: var(--white);
+}
+.field textarea { resize: vertical; min-height: 64px; }
+.field-hint { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+.field-err { font-size: 11.5px; color: var(--red); margin-top: 5px; display: none; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: none; border-radius: 99px; font-weight: 700; font-size: 14px;
+  padding: 12px 22px; transition: transform 0.15s, background 0.2s, box-shadow 0.2s;
+  width: 100%;
+}
+.btn-green { background: var(--g); color: #fff; box-shadow: 0 6px 18px rgba(29,140,82,0.28); }
+.btn-green:hover { background: var(--g2); transform: translateY(-1px); }
+.btn-green:disabled { opacity: 0.6; transform: none; cursor: not-allowed; }
+.btn-ghost { background: var(--warm); color: var(--bark2); }
+.btn-ghost:hover { background: var(--border); }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-danger:hover { background: #c72c2c; }
+.btn-sm { width: auto; padding: 8px 16px; font-size: 12.5px; }
+
+.login-err {
+  background: #fdeeee; color: var(--red); font-size: 13px; font-weight: 600;
+  padding: 10px 13px; border-radius: var(--r-sm); margin-bottom: 16px; display: none;
+}
+.spinner {
+  width: 15px; height: 15px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff;
+  animation: spin 0.7s linear infinite; display: inline-block;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ══════════════════════════════════════════════
+   ADMIN SHELL
+══════════════════════════════════════════════ */
+#adminScreen { display: none; min-height: 100vh; }
+
+.topbar {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 28px;
+  background: rgba(248,244,237,0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-logo {
+  font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: -0.8px;
+}
+.topbar-logo em { font-style: normal; color: var(--g); }
+.topbar-logo .tag {
+  font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700;
+  color: var(--muted); letter-spacing: 0.5px; margin-left: 8px;
+  background: var(--warm); padding: 3px 9px; border-radius: 99px; vertical-align: 2px;
+}
+.topbar-right { display: flex; align-items: center; gap: 14px; }
+.who { font-size: 13px; color: var(--muted); }
+.icon-btn {
+  background: var(--white); border: 1px solid var(--border); color: var(--bark2);
+  width: 36px; height: 36px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-size: 15px;
+  transition: background 0.15s;
+}
+.icon-btn:hover { background: var(--warm); }
+
+.main { max-width: 1080px; margin: 0 auto; padding: 28px 24px 80px; }
+
+.main-head {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+  margin-bottom: 22px;
+}
+.main-head h1 {
+  font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; letter-spacing: -0.8px;
+}
+.main-head p { color: var(--muted); font-size: 13.5px; margin-top: 3px; }
+
+.toolbar { display: flex; gap: 10px; flex-wrap: wrap; }
+.search-wrap { position: relative; }
+.search-wrap input {
+  width: 240px; padding: 10px 14px 10px 34px; font-size: 13.5px;
+  border: 1.5px solid var(--border); border-radius: 99px; background: var(--white);
+}
+.search-wrap input:focus { outline: none; border-color: var(--g); }
+.search-wrap .ic { position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--muted); }
+
+.btn-add {
+  background: var(--g); color: #fff; border: none; border-radius: 99px;
+  padding: 10px 20px 10px 16px; font-weight: 700; font-size: 13.5px;
+  display: inline-flex; align-items: center; gap: 7px;
+  box-shadow: 0 6px 18px rgba(29,140,82,0.25);
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-add:hover { background: var(--g2); transform: translateY(-1px); }
+
+/* stat chips */
+.stats { display: flex; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
+.stat {
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--r);
+  padding: 14px 20px; min-width: 120px; box-shadow: var(--shadow-sm);
+}
+.stat .n { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; }
+.stat .l { font-size: 11.5px; color: var(--muted); font-weight: 600; letter-spacing: 0.3px; margin-top: 2px; }
+.stat.out .n { color: var(--red); }
+
+/* table */
+.table-card {
+  background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-sm); overflow: hidden;
+}
+table { width: 100%; border-collapse: collapse; }
+thead th {
+  text-align: left; font-size: 11px; font-weight: 700; color: var(--muted);
+  letter-spacing: 0.4px; text-transform: uppercase;
+  padding: 14px 18px; border-bottom: 1px solid var(--border); background: var(--cream);
+}
+tbody td { padding: 14px 18px; border-bottom: 1px solid var(--border); font-size: 13.5px; vertical-align: middle; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: rgba(29,140,82,0.03); }
+
+.pcode {
+  font-family: 'DM Sans', sans-serif; font-size: 11.5px; font-weight: 700;
+  background: var(--warm); color: var(--bark2); padding: 3px 9px; border-radius: 6px; letter-spacing: 0.3px;
+}
+.pname { font-weight: 700; }
+.pdesc { color: var(--muted); font-size: 12px; margin-top: 2px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.price-now { font-weight: 700; }
+.price-orig { color: var(--muted); text-decoration: line-through; font-size: 12px; margin-left: 6px; }
+.badge-stock {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 99px;
+}
+.badge-stock.in { background: var(--g-pale); color: var(--g); }
+.badge-stock.out { background: #fdeeee; color: var(--red); }
+.row-actions { display: flex; gap: 8px; }
+.act-btn {
+  background: var(--warm); border: none; color: var(--bark2);
+  width: 32px; height: 32px; border-radius: 8px; font-size: 13px;
+  display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+}
+.act-btn:hover { background: var(--border); }
+.act-btn.del:hover { background: #fdeeee; color: var(--red); }
+
+.empty-state {
+  text-align: center; padding: 60px 20px; color: var(--muted);
+}
+.empty-state .big { font-size: 40px; margin-bottom: 10px; }
+.empty-state h3 { font-family: 'Syne', sans-serif; color: var(--bark); font-size: 17px; margin-bottom: 5px; }
+
+/* ══════════════════════════════════════════════
+   MODAL (Add / Edit)
+══════════════════════════════════════════════ */
+.overlay {
+  position: fixed; inset: 0; background: rgba(34,26,16,0.42);
+  backdrop-filter: blur(3px); z-index: 200;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--white); border-radius: var(--r-lg); width: 100%; max-width: 560px;
+  max-height: 88vh; overflow-y: auto; box-shadow: var(--shadow-lg);
+  transform: translateY(16px) scale(0.98); opacity: 0; transition: transform 0.25s, opacity 0.25s;
+}
+.overlay.open .modal { transform: translateY(0) scale(1); opacity: 1; }
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 26px; border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; background: var(--white); z-index: 2;
+}
+.modal-head h2 { font-family: 'Syne', sans-serif; font-size: 19px; font-weight: 800; }
+.modal-close { background: var(--warm); border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 15px; color: var(--bark2); }
+.modal-body { padding: 22px 26px 8px; }
+.modal-foot { padding: 18px 26px 24px; display: flex; gap: 10px; }
+.modal-foot .btn { width: auto; flex: 1; }
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.req { color: var(--red); }
+.form-note {
+  background: var(--g-pale); color: var(--g); font-size: 12px; font-weight: 600;
+  padding: 9px 12px; border-radius: var(--r-sm); margin-bottom: 18px;
+}
+
+/* confirm dialog */
+.confirm-box { max-width: 380px; text-align: center; padding: 30px 26px 26px; }
+.confirm-box .ic { font-size: 34px; margin-bottom: 10px; }
+.confirm-box h3 { font-family: 'Syne', sans-serif; font-size: 17px; margin-bottom: 6px; }
+.confirm-box p { color: var(--muted); font-size: 13.5px; margin-bottom: 22px; line-height: 1.5; }
+.confirm-box .row2 { grid-template-columns: 1fr 1fr; }
+
+/* toast */
+#toast {
+  position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--bark); color: #fff; padding: 12px 22px; border-radius: 99px;
+  font-size: 13.5px; font-weight: 600; box-shadow: var(--shadow-lg);
+  opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 300;
+}
+#toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.err { background: var(--red); }
+
+@media (max-width: 640px) {
+  .row2 { grid-template-columns: 1fr; }
+  .search-wrap input { width: 150px; }
+  thead th:nth-child(3), tbody td:nth-child(3) { display: none; }
+  .main-head { align-items: flex-start; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     LOGIN
+══════════════════════════════════════════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">gozz<em>o</em>.</div>
+    <div class="login-sub">Admin panel — authorised access only</div>
+    <div class="login-err" id="loginErr"></div>
+    <form id="loginForm">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="loginEmail" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="loginPassword" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-green" id="loginBtn">Sign in</button>
+    </form>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     ADMIN SHELL
+══════════════════════════════════════════════ -->
+<div id="adminScreen">
+  <div class="topbar">
+    <div class="topbar-logo">gozz<em>o</em>.<span class="tag">ADMIN</span></div>
+    <div class="topbar-right">
+      <span class="who" id="whoEmail"></span>
+      <button class="icon-btn" id="signOutBtn" title="Sign out">⎋</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="main-head">
+      <div>
+        <h1>Products</h1>
+        <p id="productCountLabel">Loading products…</p>
+      </div>
+      <div class="toolbar">
+        <div class="search-wrap">
+          <span class="ic">🔍</span>
+          <input type="text" id="searchInput" placeholder="Search by code or name">
+        </div>
+        <button class="btn-add" id="addProductBtn">＋ Add product</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="n" id="statTotal">0</div><div class="l">TOTAL PRODUCTS</div></div>
+      <div class="stat"><div class="n" id="statIn">0</div><div class="l">IN STOCK</div></div>
+      <div class="stat out"><div class="n" id="statOut">0</div><div class="l">OUT OF STOCK</div></div>
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Product</th>
+            <th>Unit</th>
+            <th>Price</th>
+            <th>Stock</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="productTableBody"></tbody>
+      </table>
+      <div class="empty-state" id="emptyState" style="display:none">
+        <div class="big">📦</div>
+        <h3>No products yet</h3>
+        <p>Add your first product to get started.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     ADD / EDIT MODAL
+══════════════════════════════════════════════ -->
+<div class="overlay" id="formOverlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="formTitle">Add product</h2>
+      <button class="modal-close" id="formCloseBtn">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-note" id="editNote" style="display:none">Editing existing product — change only what you need.</div>
+      <form id="productForm">
+        <div class="field">
+          <label>Product code <span class="req">*</span></label>
+          <input type="text" id="fCode" placeholder="e.g. VEG-001" autocomplete="off">
+          <div class="field-hint">Used as the unique ID. Cannot be changed after creation.</div>
+          <div class="field-err" id="errCode">Please enter a product code.</div>
+        </div>
+        <div class="field">
+          <label>Name <span class="req">*</span></label>
+          <input type="text" id="fName" placeholder="e.g. Fresh Tomatoes">
+          <div class="field-err" id="errName">Please enter a product name.</div>
+        </div>
+        <div class="field">
+          <label>Description</label>
+          <textarea id="fDescription" placeholder="Optional short description"></textarea>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Unit <span class="req">*</span></label>
+            <select id="fUnit">
+              <option value="">Select unit</option>
+              <option value="kg">Kilogram (kg)</option>
+              <option value="gram">Gram (100 g)</option>
+              <option value="nos">Nos (pcs)</option>
+            </select>
+            <div class="field-err" id="errUnit">Please select a unit.</div>
+          </div>
+          <div class="field">
+            <label>Stock status <span class="req">*</span></label>
+            <select id="fStock">
+              <option value="true">In stock</option>
+              <option value="false">Out of stock</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Original price (₹)</label>
+            <input type="number" id="fOriginalPrice" placeholder="Optional" min="0" step="0.01">
+          </div>
+          <div class="field">
+            <label>Discounted price (₹) <span class="req">*</span></label>
+            <input type="number" id="fDiscountedPrice" placeholder="e.g. 49" min="0" step="0.01">
+            <div class="field-err" id="errPrice">Please enter a discounted price.</div>
+          </div>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Category</label>
+            <input type="text" id="fCategory" placeholder="e.g. Vegetables" list="categoryList">
+            <datalist id="categoryList">
+              <option value="Vegetables"><option value="Fruits"><option value="Dairy">
+              <option value="Grains"><option value="Snacks"><option value="Beverages">
+            </datalist>
+          </div>
+          <div class="field">
+            <label>Badge</label>
+            <input type="text" id="fBadge" placeholder="e.g. SALE (optional)">
+          </div>
+        </div>
+        <div class="field">
+          <label>Image URL</label>
+          <input type="text" id="fImageUrl" placeholder="https://… (optional)">
+          <div class="field-hint">Leave blank to show a fallback icon instead.</div>
+        </div>
+        <div class="field">
+          <label>Fallback icon</label>
+          <input type="text" id="fEmoji" placeholder="e.g. 🍅 (shown when no image URL)" maxlength="4">
+        </div>
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" id="formCancelBtn">Cancel</button>
+      <button class="btn btn-green" id="formSaveBtn">Save product</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     DELETE CONFIRM
+══════════════════════════════════════════════ -->
+<div class="overlay" id="deleteOverlay">
+  <div class="modal confirm-box">
+    <div class="ic">🗑️</div>
+    <h3>Remove this product?</h3>
+    <p>This will permanently delete <strong id="deleteProductLabel"></strong> from Firestore. This can't be undone.</p>
+    <div class="row2">
+      <button class="btn btn-ghost" id="deleteCancelBtn">Cancel</button>
+      <button class="btn btn-danger" id="deleteConfirmBtn">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     OVERWRITE CONFIRM (add with existing code)
+══════════════════════════════════════════════ -->
+<div class="overlay" id="overwriteOverlay">
+  <div class="modal confirm-box">
+    <div class="ic">⚠️</div>
+    <h3>Code already exists</h3>
+    <p>A product with code <strong id="overwriteCodeLabel"></strong> already exists. Do you want to open it for editing instead?</p>
+    <div class="row2">
+      <button class="btn btn-ghost" id="overwriteCancelBtn">Cancel</button>
+      <button class="btn btn-green" id="overwriteEditBtn">Edit it</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+import {
+  getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, query, orderBy
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+import {
+  getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
+
+// ┌─────────────────────────────────────────────────────┐
+// │  STEP 1 — Paste the SAME Firebase config used in    │
+// │  your storefront (index.html) here                  │
+// └─────────────────────────────────────────────────────┘
+const firebaseConfig = {
+  apiKey: "AIzaSyB5XVdZM1Rm7Rbwhl4RMlCO1Q0WeB-eDO0",
+  authDomain: "gozzo-delivery.firebaseapp.com",
+  projectId: "gozzo-delivery",
+  storageBucket: "gozzo-delivery.firebasestorage.app",
+  messagingSenderId: "931505703574",
+  appId: "1:931505703574:web:7d7d1ee4042fee4a3f50b7",
+  measurementId: "G-MEVQVT3SVR"
+};
+
+const app  = initializeApp(firebaseConfig);
+const db   = getFirestore(app);
+const auth = getAuth(app);
+
+// ══════════════════════════════════════════════
+//  AUTH
+// ══════════════════════════════════════════════
+const loginScreen = document.getElementById("loginScreen");
+const adminScreen = document.getElementById("adminScreen");
+const loginForm   = document.getElementById("loginForm");
+const loginErr    = document.getElementById("loginErr");
+const loginBtn    = document.getElementById("loginBtn");
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginScreen.style.display = "none";
+    adminScreen.style.display = "block";
+    document.getElementById("whoEmail").textContent = user.email;
+    loadProducts();
+  } else {
+    loginScreen.style.display = "flex";
+    adminScreen.style.display = "none";
+  }
+});
+
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  loginErr.style.display = "none";
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  loginBtn.disabled = true;
+  loginBtn.innerHTML = `<div class="spinner"></div> Signing in…`;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    loginErr.textContent = "Incorrect email or password.";
+    loginErr.style.display = "block";
+  }
+  loginBtn.disabled = false;
+  loginBtn.textContent = "Sign in";
+});
+
+document.getElementById("signOutBtn").addEventListener("click", () => signOut(auth));
+
+// ══════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════
+let products = [];
+let editingCode = null; // null = add mode, else = code being edited
+let pendingDeleteCode = null;
+let pendingAddCode = null;
+
+// ══════════════════════════════════════════════
+//  LOAD + RENDER PRODUCTS
+// ══════════════════════════════════════════════
+async function loadProducts() {
+  try {
+    const snap = await getDocs(query(collection(db, "products"), orderBy("name")));
+    products = [];
+    snap.forEach(d => products.push({ code: d.id, ...d.data() }));
+  } catch (e) {
+    console.error(e);
+    toast("Couldn't load products. Check Firebase config.", true);
+    products = [];
+  }
+  renderTable();
+}
+
+function renderTable(filterText = "") {
+  const body = document.getElementById("productTableBody");
+  const empty = document.getElementById("emptyState");
+  const f = filterText.trim().toLowerCase();
+  const list = f
+    ? products.filter(p => p.code.toLowerCase().includes(f) || (p.name||"").toLowerCase().includes(f))
+    : products;
+
+  document.getElementById("productCountLabel").textContent =
+    `${products.length} product${products.length === 1 ? "" : "s"} in your catalogue`;
+  document.getElementById("statTotal").textContent = products.length;
+  document.getElementById("statIn").textContent = products.filter(p => p.inStock).length;
+  document.getElementById("statOut").textContent = products.filter(p => !p.inStock).length;
+
+  if (!list.length) {
+    body.innerHTML = "";
+    empty.style.display = "block";
+    empty.querySelector("h3").textContent = f ? "No matches" : "No products yet";
+    empty.querySelector("p").textContent = f ? "Try a different search term." : "Add your first product to get started.";
+    return;
+  }
+  empty.style.display = "none";
+
+  body.innerHTML = list.map(p => `
+    <tr>
+      <td><span class="pcode">${escapeHtml(p.code)}</span></td>
+      <td>
+        <div class="pname">${escapeHtml(p.name || "—")}</div>
+        ${p.description ? `<div class="pdesc">${escapeHtml(p.description)}</div>` : ""}
+      </td>
+      <td>${p.unit === "kg" ? "Kilogram" : p.unit === "gram" ? "Gram" : "—"}</td>
+      <td>
+        <span class="price-now">₹${fmtPrice(p.discountedPrice)}</span>
+        ${p.originalPrice ? `<span class="price-orig">₹${fmtPrice(p.originalPrice)}</span>` : ""}
+      </td>
+      <td><span class="badge-stock ${p.inStock ? "in" : "out"}">${p.inStock ? "● In stock" : "● Out of stock"}</span></td>
+      <td>
+        <div class="row-actions" style="justify-content:flex-end">
+          <button class="act-btn edit" title="Edit" data-code="${escapeAttr(p.code)}">✎</button>
+          <button class="act-btn del" title="Delete" data-code="${escapeAttr(p.code)}">🗑</button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+
+  body.querySelectorAll(".act-btn.edit").forEach(btn =>
+    btn.addEventListener("click", () => openEditForm(btn.dataset.code)));
+  body.querySelectorAll(".act-btn.del").forEach(btn =>
+    btn.addEventListener("click", () => openDeleteConfirm(btn.dataset.code)));
+}
+
+function fmtPrice(n) {
+  if (n === undefined || n === null || n === "") return "—";
+  return Number(n).toLocaleString("en-IN");
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function escapeAttr(s) { return escapeHtml(s); }
+
+document.getElementById("searchInput").addEventListener("input", (e) => renderTable(e.target.value));
+
+// ══════════════════════════════════════════════
+//  ADD / EDIT MODAL
+// ══════════════════════════════════════════════
+const formOverlay = document.getElementById("formOverlay");
+const formFields = {
+  code: document.getElementById("fCode"),
+  name: document.getElementById("fName"),
+  description: document.getElementById("fDescription"),
+  unit: document.getElementById("fUnit"),
+  stock: document.getElementById("fStock"),
+  originalPrice: document.getElementById("fOriginalPrice"),
+  discountedPrice: document.getElementById("fDiscountedPrice"),
+  category: document.getElementById("fCategory"),
+  badge: document.getElementById("fBadge"),
+  imageUrl: document.getElementById("fImageUrl"),
+  emoji: document.getElementById("fEmoji"),
+};
+
+function resetForm() {
+  Object.values(formFields).forEach(el => el.value = "");
+  formFields.stock.value = "true";
+  ["errCode","errName","errUnit","errPrice"].forEach(id => document.getElementById(id).style.display = "none");
+}
+
+function openAddForm() {
+  editingCode = null;
+  resetForm();
+  document.getElementById("formTitle").textContent = "Add product";
+  document.getElementById("editNote").style.display = "none";
+  formFields.code.disabled = false;
+  formOverlay.classList.add("open");
+  formFields.code.focus();
+}
+
+function openEditForm(code) {
+  const p = products.find(x => x.code === code);
+  if (!p) return;
+  editingCode = code;
+  resetForm();
+  formFields.code.value = p.code;
+  formFields.code.disabled = true;
+  formFields.name.value = p.name || "";
+  formFields.description.value = p.description || "";
+  formFields.unit.value = p.unit || "";
+  formFields.stock.value = String(!!p.inStock);
+  formFields.originalPrice.value = p.originalPrice ?? "";
+  formFields.discountedPrice.value = p.discountedPrice ?? "";
+  formFields.category.value = p.category || "";
+  formFields.badge.value = p.badge || "";
+  formFields.imageUrl.value = p.imageUrl || "";
+  formFields.emoji.value = p.emoji || "";
+  document.getElementById("formTitle").textContent = `Edit ${p.name || p.code}`;
+  document.getElementById("editNote").style.display = "block";
+  formOverlay.classList.add("open");
+  formFields.name.focus();
+}
+
+function closeForm() { formOverlay.classList.remove("open"); }
+
+document.getElementById("addProductBtn").addEventListener("click", openAddForm);
+document.getElementById("formCloseBtn").addEventListener("click", closeForm);
+document.getElementById("formCancelBtn").addEventListener("click", closeForm);
+formOverlay.addEventListener("click", (e) => { if (e.target === formOverlay) closeForm(); });
+
+document.getElementById("formSaveBtn").addEventListener("click", async () => {
+  const code = formFields.code.value.trim().toUpperCase();
+  const name = formFields.name.value.trim();
+  const unit = formFields.unit.value;
+  const discountedPrice = formFields.discountedPrice.value;
+
+  let valid = true;
+  document.getElementById("errCode").style.display = code ? "none" : (valid = false, "block");
+  document.getElementById("errName").style.display = name ? "none" : (valid = false, "block");
+  document.getElementById("errUnit").style.display = unit ? "none" : (valid = false, "block");
+  document.getElementById("errPrice").style.display = discountedPrice !== "" ? "none" : (valid = false, "block");
+  if (!valid) return;
+
+  // Adding a new product with a code that already exists → offer to edit instead
+  if (!editingCode) {
+    const existing = await getDoc(doc(db, "products", code));
+    if (existing.exists()) {
+      pendingAddCode = code;
+      document.getElementById("overwriteCodeLabel").textContent = code;
+      document.getElementById("overwriteOverlay").classList.add("open");
+      return;
+    }
+  }
+
+  await saveProduct(code);
+});
+
+async function saveProduct(code) {
+  const data = {
+    name: formFields.name.value.trim(),
+    description: formFields.description.value.trim() || null,
+    unit: formFields.unit.value,
+    inStock: formFields.stock.value === "true",
+    originalPrice: formFields.originalPrice.value !== "" ? Number(formFields.originalPrice.value) : null,
+    discountedPrice: Number(formFields.discountedPrice.value),
+    category: formFields.category.value.trim() || null,
+    badge: formFields.badge.value.trim() || null,
+    imageUrl: formFields.imageUrl.value.trim() || null,
+    emoji: formFields.emoji.value.trim() || null,
+    updatedAt: new Date().toISOString(),
+  };
+
+  const saveBtn = document.getElementById("formSaveBtn");
+  saveBtn.disabled = true;
+  saveBtn.innerHTML = `<div class="spinner"></div> Saving…`;
+  try {
+    await setDoc(doc(db, "products", code), data, { merge: true });
+    toast(editingCode ? `${data.name} updated` : `${data.name} added`);
+    closeForm();
+    await loadProducts();
+  } catch (e) {
+    console.error(e);
+    toast("Couldn't save product. Check Firebase config & rules.", true);
+  }
+  saveBtn.disabled = false;
+  saveBtn.textContent = "Save product";
+}
+
+document.getElementById("overwriteCancelBtn").addEventListener("click", () => {
+  document.getElementById("overwriteOverlay").classList.remove("open");
+});
+document.getElementById("overwriteEditBtn").addEventListener("click", () => {
+  document.getElementById("overwriteOverlay").classList.remove("open");
+  closeForm();
+  openEditForm(pendingAddCode);
+});
+
+// ══════════════════════════════════════════════
+//  DELETE
+// ══════════════════════════════════════════════
+const deleteOverlay = document.getElementById("deleteOverlay");
+function openDeleteConfirm(code) {
+  const p = products.find(x => x.code === code);
+  pendingDeleteCode = code;
+  document.getElementById("deleteProductLabel").textContent = `${p ? p.name : ""} (${code})`;
+  deleteOverlay.classList.add("open");
+}
+document.getElementById("deleteCancelBtn").addEventListener("click", () => deleteOverlay.classList.remove("open"));
+deleteOverlay.addEventListener("click", (e) => { if (e.target === deleteOverlay) deleteOverlay.classList.remove("open"); });
+
+document.getElementById("deleteConfirmBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("deleteConfirmBtn");
+  btn.disabled = true;
+  btn.innerHTML = `<div class="spinner"></div> Deleting…`;
+  try {
+    await deleteDoc(doc(db, "products", pendingDeleteCode));
+    toast("Product deleted");
+    deleteOverlay.classList.remove("open");
+    await loadProducts();
+  } catch (e) {
+    console.error(e);
+    toast("Couldn't delete product.", true);
+  }
+  btn.disabled = false;
+  btn.textContent = "Delete";
+});
+
+// ══════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════
+function toast(msg, isErr = false) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.toggle("err", isErr);
+  el.classList.add("show");
+  setTimeout(() => el.classList.remove("show"), 2800);
+}
+</script>
+</body>
+</html>
