@@ -192,6 +192,7 @@ input, select, textarea { font-family: inherit; }
 .table-card {
   background: var(--white); border: 1px solid var(--border); border-radius: var(--r-lg);
   box-shadow: var(--shadow-sm); overflow: hidden;
+  overflow: auto;
 }
 table { width: 100%; border-collapse: collapse; }
 thead th {
@@ -400,14 +401,25 @@ tbody tr:hover { background: rgba(29,140,82,0.03); }
         </div>
         <div class="row2">
           <div class="field">
-            <label>Unit <span class="req">*</span></label>
-            <select id="fUnit">
-              <option value="">Select unit</option>
-              <option value="kg">Kilogram (kg)</option>
-              <option value="gram">Gram (100 g)</option>
-              <option value="nos">Nos (pcs)</option>
-            </select>
-            <div class="field-err" id="errUnit">Please select a unit.</div>
+<label>Unit <span class="req">*</span></label>
+
+<input
+  id="fUnit"
+  list="weights"
+  placeholder="e.g. gram250"
+  autocomplete="off",
+  required
+>
+
+<datalist id="weights">
+  <option value="unit">
+  <option value="kg">
+  <option value="gram100">
+  <option value="gram250">
+  <option value="gram500">
+</datalist>
+
+<div class="field-err" id="errUnit">Please enter or select a unit.</div>
           </div>
           <div class="field">
             <label>Stock status <span class="req">*</span></label>
@@ -432,10 +444,28 @@ tbody tr:hover { background: rgba(29,140,82,0.03); }
           <div class="field">
             <label>Category</label>
             <input type="text" id="fCategory" placeholder="e.g. Vegetables" list="categoryList">
-            <datalist id="categoryList">
-              <option value="Vegetables"><option value="Fruits"><option value="Dairy">
-              <option value="Grains"><option value="Snacks"><option value="Beverages">
-            </datalist>
+<datalist id="categoryList">
+  <option value="Vegetables">
+  <option value="Fruits">
+  <option value="Dairy">
+  <option value="Grains & Rice">
+  <option value="Pulses & Lentils">
+  <option value="Flour">
+  <option value="Oil & Ghee">
+  <option value="Sugar & Sweeteners">
+  <option value="Spices & Masalas">
+  <option value="Salt">
+  <option value="Tea & Coffee">
+  <option value="Beverages">
+  <option value="Snacks">
+  <option value="Biscuits">
+  <option value="Bakery">
+  <option value="Frozen Foods">
+  <option value="Dry Fruits & Nuts">
+  <option value="Personal Care">
+  <option value="Household">
+  <option value="Cleaning Supplies">
+</datalist>
           </div>
           <div class="field">
             <label>Badge</label>
@@ -613,7 +643,7 @@ function renderTable(filterText = "") {
         <div class="pname">${escapeHtml(p.name || "—")}</div>
         ${p.description ? `<div class="pdesc">${escapeHtml(p.description)}</div>` : ""}
       </td>
-      <td>${p.unit === "kg" ? "Kilogram" : p.unit === "gram" ? "Gram" : "—"}</td>
+      <td>${p.unit === "kg" ? "Kilogram" : p.unit === "gram100" ? "100 Gram" : p.unit === "gram500" ? "500 gram" : "—"}</td>
       <td>
         <span class="price-now">₹${fmtPrice(p.discountedPrice)}</span>
         ${p.originalPrice ? `<span class="price-orig">₹${fmtPrice(p.originalPrice)}</span>` : ""}

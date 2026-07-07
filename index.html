@@ -29,13 +29,18 @@
   // Docs are written by the admin panel with: name, description, unit,
   // inStock, originalPrice, discountedPrice, category, badge, imageUrl, emoji
   function mapProduct(id, d) {
+    
     return {
       id,
       name: d.name || "Unnamed item",
       category: d.category || "Others",
       emoji: d.emoji || "🛒",
       imageUrl: d.imageUrl || "",
-      weight: d.unit === "kg" ? "per kg" : d.unit === "gram" ? "per 100 gram" : "per unit",
+      weight: d.unit === "kg"
+  ? "per kg"
+  : d.unit.startsWith("gram")
+    ? `per ${d.unit.slice(4)} gram`
+    : "per unit",
       price: d.discountedPrice ?? 0,
       originalPrice: d.originalPrice || null,
       badge: d.badge || null,
@@ -929,6 +934,7 @@ function renderHeroCards() {
 
 function renderCategories() {
   const catMap = {};
+  
   products.forEach(p => { catMap[p.category] = (catMap[p.category]||0)+1; });
   document.getElementById("catGrid").innerHTML = CATEGORIES.map(c => `
     <a class="cat-card" href="#shop" onclick="filterBy('${c.name}')">
