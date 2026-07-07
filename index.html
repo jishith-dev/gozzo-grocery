@@ -10,7 +10,7 @@
 <!-- ══ FIREBASE SDK ══ -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, query, orderBy, limit} from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
   const firebaseConfig = {
   apiKey: "AIzaSyB5XVdZM1Rm7Rbwhl4RMlCO1Q0WeB-eDO0",
@@ -49,20 +49,62 @@
     };
   }
 
-  async function loadProducts() {
-    try {
-      const snap = await getDocs(query(collection(db, "products"), orderBy("name")));
-      const items = [];
-      snap.forEach(doc => items.push(mapProduct(doc.id, doc.data())));
-      window.__gozzoProducts = items;
-    } catch (e) {
-      console.warn("Firebase not configured or error:", e.message);
-      window.__gozzoProducts = null; // fallback to demo data
+  const PAGE_SIZE = 50;
+
+let lastDoc = null;
+let hasMore = true;
+
+async function loadProducts(reset = false) {
+  try {
+    if (reset) {
+      lastDoc = null;
+      hasMore = true;
+      window.__gozzoProducts = [];
     }
-    window.__gozzoReady = true;
-    document.dispatchEvent(new Event("gozzo:ready"));
+
+    if (!hasMore) return;
+
+    let q = query(
+      collection(db, "products"),
+      orderBy("name"),
+      ...(lastDoc ? [startAfter(lastDoc)] : []),
+      limit(PAGE_SIZE)
+    );
+
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      hasMore = false;
+      return;
+    }
+
+    const items = snap.docs.map(doc =>
+      mapProduct(doc.id, doc.data())
+    );
+
+    window.__gozzoProducts = items;
+
+    lastDoc = snap.docs[snap.docs.length - 1];
+    hasMore = snap.docs.length === PAGE_SIZE;
+
+  } catch (e) {
+    console.warn("Firebase not configured or error:", e.message);
+    window.__gozzoProducts = null;
   }
-  loadProducts();
+
+  window.__gozzoReady = true;
+  document.dispatchEvent(new Event("gozzo:ready"));
+}
+
+// Load first 50 products
+loadProducts(true);
+
+document.getElementById("loadMoreBtn").addEventListener("click", async () => {
+  await loadProducts();
+  products = window.__gozzoProducts;
+  renderAll();
+});
+
 </script>
 
 <style>
@@ -136,6 +178,20 @@ header.scrolled { box-shadow: 0 4px 28px rgba(0,0,0,0.07); }
   display: flex; align-items: center; justify-content: center;
   font-size: 17px; transition: background 0.2s, transform 0.15s;
 }
+#loadMoreBtn {
+  position: relative;
+  background: var(--g); color: #fff;
+  border: none; cursor: pointer;
+  width: 100px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  color: white;
+  padding: 10px;
+  margin-top: 20px;
+  font-size: 12px; transition: background 0.2s, transform 0.15s;
+}
+#loadMoreBtn:hover {
+  background: var(--g2); transform: scale(1.06); 
+}
 .cart-btn:hover { background: var(--g2); transform: scale(1.06); }
 .cart-count {
   position: absolute; top: -5px; right: -5px;
@@ -150,7 +206,7 @@ header.scrolled { box-shadow: 0 4px 28px rgba(0,0,0,0.07); }
 
 .hamburger {
   display: none; flex-direction: column; gap: 5px;
-  background: none; border: none; cursor: pointer; padding: 4px;
+  background: none; border: none; cursor: pointer;  : 4px;
 }
 .hamburger span {
   display: block; width: 22px; height: 2px;
@@ -261,7 +317,7 @@ header.scrolled { box-shadow: 0 4px 28px rgba(0,0,0,0.07); }
   animation: fadeUp 0.5s 0.32s ease both;
 }
 .trust-item { display: flex; flex-direction: column; }
-.trust-item strong { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -1px; }
+.trust-item strong { font-family: sans-serif; font-size: 24px; font-weight: 800; letter-spacing: -1px; }
 .trust-item small { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
 /* hero visual grid */
@@ -528,6 +584,7 @@ header.scrolled { box-shadow: 0 4px 28px rgba(0,0,0,0.07); }
 .ci-img img { width: 44px; height: 44px; object-fit: cover; border-radius: 8px; }
 .ci-info { flex: 1; min-width: 0; }
 .ci-name { font-family: 'Syne', sans-serif; font-size: 13.5px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ci-unit { font-size: 10px; color: orange}
 .ci-price { font-size: 12px; color: var(--g); font-weight: 600; margin-top: 3px; }
 .qty { display: flex; align-items: center; gap: 9px; }
 .qty-btn {
@@ -537,12 +594,12 @@ header.scrolled { box-shadow: 0 4px 28px rgba(0,0,0,0.07); }
   transition: background 0.2s;
 }
 .qty-btn:hover { background: #ddd3bc; }
-.qty-n { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 800; min-width: 14px; text-align: center; }
+.qty-n { font-family: sans-serif; font-size: 14px; font-weight: 800; min-width: 14px; text-align: center; }
 
 .drawer-foot { padding: 18px 22px; border-top: 1px solid var(--border); }
 .cart-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
 .cart-line span { font-size: 13px; color: var(--muted); }
-.cart-line strong { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; }
+.cart-line strong { font-family: sans-serif; font-size: 22px; font-weight: 800; }
 
 .drawer-foot .btn { width: 100%; justify-content: center; padding: 15px; font-size: 15px; }
 
@@ -756,6 +813,9 @@ footer {
   </div>
   <div class="filter-bar" id="filterBar"></div>
   <div class="product-grid" id="productGrid"></div>
+  <div class="pagination">
+  <button id="loadMoreBtn">Load Next 50 products</button>
+</div>
 </section>
   <!--
 <!-- ══ PROMO ══ 
@@ -884,10 +944,26 @@ const DEMO_PRODUCTS = [
 ];
 
 const CATEGORIES = [
-  { icon:"🥦", name:"Vegetables" }, { icon:"🍎", name:"Fruits" },
-  { icon:"🥛", name:"Dairy" },     { icon:"🌾", name:"Staples" },
-  { icon:"🌶️", name:"Spices" },   { icon:"🫙", name:"Oils" },
-  { icon:"🧁", name:"Snacks" },    { icon:"🫐", name:"Organic" },
+  { icon: "🥦", name: "Vegetables" },
+  { icon: "🍎", name: "Fruits" },
+  { icon: "🥛", name: "Dairy" },
+  { icon: "🍚", name: "Grains & Rice" },
+  { icon: "🫘", name: "Pulses & Lentils" },
+  { icon: "🌾", name: "Flour" },
+  { icon: "🫙", name: "Oil & Ghee" },
+  { icon: "🍬", name: "Sugar & Sweeteners" },
+  { icon: "🌶️", name: "Spices & Masalas" },
+  { icon: "🧂", name: "Salt" },
+  { icon: "☕", name: "Tea & Coffee" },
+  { icon: "🥤", name: "Beverages" },
+  { icon: "🧁", name: "Snacks" },
+  { icon: "🍪", name: "Biscuits" },
+  { icon: "🍞", name: "Bakery" },
+  { icon: "🧊", name: "Frozen Foods" },
+  { icon: "🥜", name: "Dry Fruits & Nuts" },
+  { icon: "🧴", name: "Personal Care" },
+  { icon: "🏠", name: "Household" },
+  { icon: "🧼", name: "Cleaning Supplies" },
 ];
 
 let products    = [];
@@ -955,7 +1031,7 @@ function filterBy(cat) {
 }
 
 function imgEl(p, emojiSize=58) {
-  if (p.imageUrl) return `<img src="${p.imageUrl}" alt="${p.name}" loading="lazy">`;
+  if (p.imageUrl) return `<img src="${p.imageUrl}" alt="${p.name}"loading="lazy">`;
   return `<span style="font-size:${emojiSize}px">${p.emoji || '🛒'}</span>`;
 }
 
@@ -1024,11 +1100,13 @@ function renderDrawer() {
   body.innerHTML = items.map(([id,qty]) => {
     const p = products.find(x=>x.id==id);
     total += p.price * qty;
+    
     return `
     <div class="ci">
       <div class="ci-img">${p.imageUrl ? `<img src="${p.imageUrl}" alt="${p.name}">` : (p.emoji||'🛒')}</div>
       <div class="ci-info">
         <div class="ci-name">${p.name}</div>
+        <div class="ci-unit">${p.weight}</div>
         <div class="ci-price">₹${p.price} × ${qty} = ₹${p.price*qty}</div>
       </div>
       <div class="qty">
@@ -1094,10 +1172,11 @@ async function placeOrder() {
     total: `₹${total}`,
     timestamp: new Date().toLocaleString("en-IN", { timeZone:"Asia/Kolkata" })
   };
+const url = atob("aHR0cHM6Ly9zY3JpcHQuZ29vZ2xlLmNvbS9tYWNyb3Mvcy9BS2Z5Y2J4WHN5NlB2ckZTcDdvc0ludXhkM2FBYXh5bGV1TDdpbXQwMkVuZ19lN0VOVkJTNURDbXpRdXU2QkxraTA4a3l6X0lVZy9leGVj");
 
   try {
   await fetch(
-    "https://script.google.com/macros/s/AKfycbxXsy6PvrFSp7osInuxd3aAaxyleuL7imt02Eng_e7ENVBS5DCmzQuu6BLki08kyz_IUg/exec",
+    url,
     {
       method: "POST",
       mode: "no-cors",
@@ -1121,12 +1200,24 @@ function showSuccess() {
   updateCount();
   renderProducts();
   document.getElementById("checkoutModal").innerHTML = `
-    <div class="success-state">
-      <div class="big">🎉</div>
-      <h3>Order placed!</h3>
-      <p>Thanks for ordering with Gozzo.<br>Your fresh groceries are on their way.<br><br>Check your Google Sheet — the order is logged!</p>
-      <button class="btn btn-green" style="margin:24px auto 0;display:flex;width:fit-content" onclick="closeCheckout();location.reload()">Back to shop</button>
-    </div>`;
+<div class="success-state">
+  <div class="big">🎉</div>
+  <h3>Order placed!</h3>
+  <p>
+    Thank you for choosing Gozzo!<br>
+    We've received your order and are preparing it with care.<br><br>
+    If you have any questions or need assistance, feel free to contact us at
+    <strong>+91 86065 64151</strong>.
+  </p>
+  <button
+    class="btn btn-green"
+    style="margin:24px auto 0;display:flex;width:fit-content"
+    onclick="closeCheckout();location.reload()"
+  >
+    Back to shop
+  </button>
+</div>
+`;
 }
 
 function toggleWish(id) {
